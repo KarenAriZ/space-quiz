@@ -313,8 +313,10 @@
 
     .result h1 { margin: 0 auto; }
     .result-copy { margin: 10px auto 22px; color: var(--muted); font-size: 14px; }
-    .final-score { margin-bottom: 23px; font-size: 14px; }
+    .final-score { margin-bottom: 8px; font-size: 14px; }
     .final-score strong { color: var(--accent); font-size: 23px; }
+    .personal-record { margin: 0 0 23px; color: var(--muted); font-size: 14px; }
+    .personal-record strong { color: var(--text); }
     .result .primary { margin: auto; }
     [hidden] { display: none !important; }
 
@@ -392,6 +394,7 @@
         <h1 id="result-title"></h1>
         <p id="result-copy" class="result-copy"></p>
         <p class="final-score">Tu puntuación: <strong id="final-score"></strong> <span>de 10</span></p>
+        <p class="personal-record">Récord personal: <strong id="personal-record"></strong> <span>de 10</span></p>
         <button id="restart-button" class="primary" type="button">
           <span aria-hidden="true">↻</span> Volver a jugar
         </button>
@@ -474,9 +477,23 @@
     const answersElement = document.getElementById("answers");
     const feedback = document.getElementById("feedback");
     const nextButton = document.getElementById("next-button");
+    const personalRecordKey = "orbita-personal-record";
     let current = 0;
     let score = 0;
     let answered = false;
+
+    function readPersonalRecord() {
+      try {
+        const storedRecord = localStorage.getItem(personalRecordKey);
+        if (storedRecord === null || !/^\d+$/.test(storedRecord)) return null;
+        const record = Number(storedRecord);
+        return Number.isInteger(record) && record >= 0 && record <= questions.length
+          ? record
+          : null;
+      } catch {
+        return null;
+      }
+    }
 
     function renderQuestion() {
       const item = questions[current];
@@ -534,6 +551,17 @@
       quizView.hidden = true;
       resultView.hidden = false;
       document.getElementById("final-score").textContent = String(score);
+      const previousRecord = readPersonalRecord();
+      let personalRecord = previousRecord;
+      if (previousRecord === null || score > previousRecord) {
+        try {
+          localStorage.setItem(personalRecordKey, String(score));
+          personalRecord = score;
+        } catch {
+          personalRecord = score;
+        }
+      }
+      document.getElementById("personal-record").textContent = String(personalRecord);
 
       let emoji, title, copy;
       if (score >= 9) {
